@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ML FORECAST</title>
+    <style>
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #10192b;
+        color: #e8ecf1;
+    }
+    h1 {
+        color: #ffffff;
+        border-bottom: 3px solid #d63031;
+        padding-bottom: 10px;
+    }
+    h1 span {
+        color: #b0b8c4 !important;
+    }
+    h2 {
+        color: #ffffff;
+        margin-top: 40px;
+    }
+    label {
+        display: block;
+        margin-top: 14px;
+        font-weight: 600;
+        color: #cdd4de;
+    }
+    input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 4px;
+        border: 1px solid #3a4a63;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 14px;
+        background: #1c2940;
+        color: #ffffff;
+    }
+    input:focus {
+        outline: none;
+        border-color: #d63031;
+        box-shadow: 0 0 4px rgba(214,48,49,0.4);
+    }
+    small {
+        display: block;
+        color: #8291a3;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+    button {
+        margin-top: 24px;
+        padding: 12px 28px;
+        background: #d63031;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #b52627;
+    }
+    .result {
+        margin-top: 24px;
+        padding: 18px;
+        background: #16321f;
+        border-left: 5px solid #27ae60;
+        border-radius: 6px;
+        font-size: 18px;
+        color: #d4f4dd;
+    }
+    canvas {
+        background: #1c2940;
+        border-radius: 8px;
+        padding: 10px;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px;">
+    <h1 style="border:none; margin:0; padding:0;">AI Admission Predictor<br><span style="font-size:16px; font-weight:normal; color:#555;">Admission Predictor</span></h1>
+</div>
+   <form method="POST">
+ <label>Applications Received</label>
+<input type="number" name="applications" min="1000" max="3000" required>
+<small>Typical range: 1000–3000</small>
+
+<label>Seats Available</label>
+<input type="number" name="seats" min="800" max="2200" required>
+<small>Typical range: 800–2200</small>
+
+<label>Placements (%)</label>
+<input type="number" step="0.1" name="placements_pct" min="55" max="98" required>
+<small>Typical range: 55–98</small>
+
+<label>Advertisement Budget (₹)</label>
+<input type="number" name="ad_budget" min="80000" max="800000" required>
+<small>Typical range: ₹80,000–₹8,00,000</small>
+
+<label>Courses Available</label>
+<input type="number" name="courses" min="5" max="12" required>
+<small>Typical range: 5–12</small>
+
+<label>Annual Fees (₹)</label>
+<input type="number" name="annual_fees" min="75000" max="250000" required>
+<small>Typical range: ₹75,000–₹2,50,000</small>
+
+<label>Last Year Admissions</label>
+<input type="number" name="last_year_admissions" required>
+<small>(matches typical seats range)</small>
+
+    <button type="submit">Predict Admissions</button>
+</form>
+
+    {% if prediction is not none %}
+    <div class="result">
+        Predicted Admissions: <strong>{{ prediction }}</strong>
+    </div>
+    {% endif %}
+    
+{% if prediction is not none %}
+<h2 style="margin-top:40px;">Seat Utilization</h2>
+<canvas id="seatChart" width="300" height="300"></canvas>
+
+<h2 style="margin-top:40px;">Applications vs Seats vs Predicted Admissions</h2>
+<canvas id="compareChart" width="400" height="250"></canvas>
+
+<script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
+<script>
+new Chart(document.getElementById('seatChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Filled Seats (Predicted)', 'Remaining Seats'],
+        datasets: [{
+            data: [{{ prediction }}, {{ seats - prediction }}],
+            backgroundColor: ['#2c3e50', '#dfe6e9']
+        }]
+    },
+    options: { responsive: true }
+});
+
+new Chart(document.getElementById('compareChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Applications Received', 'Seats Available', 'Predicted Admissions'],
+        datasets: [{
+            label: 'Count',
+            data: [{{ applications }}, {{ seats }}, {{ prediction }}],
+            backgroundColor: ['#3498db', '#e67e22', '#27ae60']
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+</script>
+{% endif %}
